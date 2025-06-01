@@ -1,0 +1,39 @@
+name: Build, Test and Package
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libgtest-dev
+        sudo apt-get install -y debhelper
+        
+    - name: Configure and Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        cmake --build .
+        
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure
+        
+    - name: Create DEB package
+      run: |
+        cd build
+        cpack -G DEB
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: deb-package
+        path: build/*.deb
+        
